@@ -1,0 +1,22 @@
+# Optional compositor / XKB snippets for binding Globe directly in your desktop.
+#
+# Note: stock xkeyboard-config maps F21/F22/F23 to XF86TouchpadToggle/On/Off,
+# which KDE and GNOME act on. Don't use those keys for Globe output.
+#
+# 1) Bind a solo Globe tap as a shortcut key (tap_mode = key or both, tap_key = f24):
+#    - KDE Plasma System Settings -> Keyboard -> Shortcuts: press Globe (registers as F24).
+#    - Hyprland:  bind = , F24, exec, globetrot test-switch
+#    - Niri:      binds { F24 { switch-layout "next"; } }
+#
+# 2) Bind Globe + <any key> combos natively in your compositor:
+#    Option A (no XKB config): set `combo_modifier = super_alt` in /etc/globetrot.conf
+#      -> Globe+C arrives as Super+Alt+C in KDE / Hyprland / Niri / GNOME.
+#    Option B (dedicated Mod3 / Hyper modifier): set `combo_modifier = hyper` (emits KEY_F18)
+#      and add an XKB user symbol file ~/.config/xkb/symbols/gt_hyper:
+#        partial modifier_keys
+#        xkb_symbols "f18_hyper" {
+#            replace key <FK18> { [ Hyper_L ] };
+#            modifier_map Mod3 { <FK18> };
+#        };
+#      Then bind Mod3 + <key> in Hyprland (`bind = MOD3, C, ...`), Niri (`Mod3+C`), or Sway.
+#      Without this file F18 arrives as XF86Launch9, which no desktop binds by default.

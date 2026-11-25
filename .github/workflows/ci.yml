@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests (C under ASan/UBSan, Python)
+        run: make test WERROR=1
+      - name: Daemon build with warnings as errors
+        run: make daemon WERROR=1 CFLAGS="-O2 -D_FORTIFY_SOURCE=3 -fstack-protector-strong"
+      - name: End-to-end test against uinput
+        run: |
+          sudo modprobe uinput
+          sudo python3 tests/e2e_uinput.py build/globetrotd
+      - name: shellcheck
+        run: shellcheck install.sh
+
+  package:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["archlinux:base-devel", "fedora:latest", "debian:trixie"]
+    container: ${{ matrix.image }}
+    steps:
+      - name: Prepare a user with sudo
+        run: |
+          if command -v pacman >/dev/null; then pacman -Syu --noconfirm sudo git
+          elif command -v dnf >/dev/null; then dnf install -y sudo git tar gzip findutils
+          else apt-get update && apt-get install -y sudo git ca-certificates curl; fi
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+      - uses: actions/checkout@v4
+      - name: Build and install the package with install.sh
+        run: |
+          chown -R builder "$GITHUB_WORKSPACE"
+          sudo -u builder bash install.sh --source "$GITHUB_WORKSPACE" --package-only
+      - name: Check the installed package
+        run: |
+          globetrotd --check-config
+          globetrot validate
+          test -f /usr/share/libinput/60-globetrot.quirks
+          ! systemctl is-enabled globetrotd.service 2>/dev/null | grep -q enabled
+      - name: Remove it
+        run: sudo -u builder bash install.sh --uninstall
+
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: nix build
+        run: nix build -L .#default
+      - name: Module evaluation
+        run: |
+          nix eval --impure --expr '
+            let
+              flake = builtins.getFlake (toString ./.);
+              pkgs = flake.inputs.nixpkgs;
+              sys = pkgs.lib.nixosSystem {
+                system = "x86_64-linux";
+                modules = [
+                  flake.nixosModules.default
+                  { services.globetrot.enable = true;
+                    boot.loader.grub.enable = false;
+                    fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
+                    system.stateVersion = "25.11"; }
+                ];
+              };
+            in {
+              wanted = sys.config.systemd.services.globetrotd.wantedBy;
+              user = sys.config.systemd.user.services.globetrot-session.wantedBy;
+              toplevel = sys.config.system.build.toplevel.drvPath;
+            }'

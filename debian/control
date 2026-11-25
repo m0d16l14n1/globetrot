@@ -1,0 +1,18 @@
+Source: globetrot
+Section: utils
+Priority: optional
+Maintainer: Nick <nekreshen@yandex.ru>
+Build-Depends: debhelper-compat (= 13), python3
+Standards-Version: 4.7.0
+Homepage: https://github.com/m0d16l14n1/globetrot
+Rules-Requires-Root: no
+
+Package: globetrot
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3, systemd
+Recommends: kmod
+Description: Globe/Fn key for Linux: tap to switch keyboard layout
+ Makes the Globe (fn) key on Apple keyboards behave like on macOS: a quick tap
+ switches the keyboard layout, holding it keeps the Fn layer (Delete,
+ Home/End, media keys) and allows Globe+key shortcuts. Works with KDE Plasma,
+ Hyprland, niri, Sway, GNOME and fcitx5.

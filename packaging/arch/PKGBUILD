@@ -1,0 +1,34 @@
+# Maintainer: Nick <nekreshen@yandex.ru>
+pkgname=globetrot
+pkgver=0.4.0
+pkgrel=1
+pkgdesc='Globe/Fn key for Linux: tap to switch keyboard layout, hold for the Fn layer and shortcuts'
+arch=('aarch64' 'x86_64')
+url='https://github.com/m0d16l14n1/globetrot'
+license=('MIT')
+depends=('glibc' 'python' 'systemd')
+optdepends=(
+  'plasma-workspace: KDE Plasma layout switching and emoji picker'
+  'hyprland: Hyprland (and Omarchy) layout switching'
+  'niri: niri layout switching'
+  'sway: Sway layout switching'
+  'fcitx5: fcitx5 input method switching'
+)
+conflicts=('aurora-globe')
+replaces=('aurora-globe')
+backup=('etc/globetrot.conf')
+install=globetrot.install
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  make -C "$pkgname-$pkgver" daemon
+}
+
+check() {
+  make -C "$pkgname-$pkgver" test
+}
+
+package() {
+  make -C "$pkgname-$pkgver" DESTDIR="$pkgdir" PREFIX=/usr install
+}

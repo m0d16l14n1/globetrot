@@ -1,0 +1,19 @@
+post_install() {
+  cat <<'MSG'
+globetrot is installed but not running. It takes over the keyboard, so try it first:
+  sudo systemctl start globetrotd          # type something: keys must still work
+  sudo systemctl enable globetrotd         # only after that
+  systemctl --user enable --now globetrot-session
+Then tap Globe/Fn to switch layout. Status: globetrot status
+MSG
+}
+
+post_upgrade() {
+  if systemctl is-active --quiet globetrotd.service; then
+    systemctl try-restart globetrotd.service
+  fi
+}
+
+pre_remove() {
+  systemctl disable --now globetrotd.service >/dev/null 2>&1 || true
+}

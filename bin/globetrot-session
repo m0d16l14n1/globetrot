@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+import sys
+from pathlib import Path
+
+for candidate in ("@PYLIBDIR@", str(Path(__file__).resolve().parent.parent / "python")):
+    if Path(candidate).is_dir() and candidate not in sys.path:
+        sys.path.insert(0, candidate)
+
+from globetrot.session import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

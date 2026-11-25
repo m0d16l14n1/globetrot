@@ -1,0 +1,29 @@
+[Unit]
+Description=Globetrot Globe/Fn key daemon
+Documentation=file://@DOCDIR@/README.md
+After=systemd-udevd.service systemd-modules-load.service
+Before=display-manager.service
+
+[Service]
+Type=simple
+ExecStartPre=+-@MODPROBE@ uinput
+ExecStart=@BINDIR@/globetrotd --config @SYSCONFDIR@/globetrot.conf --socket /run/globetrot/events.sock
+ExecReload=@BINDIR@/globetrotd --check-config --config @SYSCONFDIR@/globetrot.conf
+ExecReload=@KILL@ -HUP $MAINPID
+RuntimeDirectory=globetrot
+RuntimeDirectoryMode=0755
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+RestrictRealtime=yes
+DevicePolicy=closed
+DeviceAllow=/dev/uinput rw
+DeviceAllow=char-input rw
+
+[Install]
+WantedBy=multi-user.target

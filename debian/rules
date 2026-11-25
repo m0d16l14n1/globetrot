@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	$(MAKE) daemon CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)"
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	$(MAKE) test
+endif
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/globetrot PREFIX=/usr \
+		LICENSEDIR=/usr/share/doc/globetrot MODPROBE=/usr/sbin/modprobe KILL=/usr/bin/kill
+
+# The daemon takes over the keyboard: never enable or start it on install.
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+
+override_dh_installsystemduser:
+	dh_installsystemduser --no-enable

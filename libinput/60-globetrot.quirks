@@ -1,0 +1,7 @@
+# globetrotd grabs the built-in keyboard and re-emits its keys from this
+# virtual device. Mark it as the internal keyboard so libinput keeps pairing it
+# with the internal touchpad for disable-while-typing.
+[Globetrot Virtual Keyboard]
+MatchName=Globetrot Virtual Keyboard
+MatchUdevType=keyboard
+AttrKeyboardIntegration=internal
